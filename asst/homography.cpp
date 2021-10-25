@@ -46,9 +46,43 @@ Matrix computeHomography(const CorrespondencePair correspondences[4]) {
   // Compute a homography from 4 point correspondences.
 
   Matrix output(3, 3);
+  output(2, 2) = 1.0f;
 
+  Matrix x(8, 1);
+	// x << a << b << c << d << e << f << g << h;
 
-  return output
+  CorrespondencePair c = correspondences[4];
+
+	Matrix A(8, 8);
+	Matrix B(8, 1);
+	B << correspondences[0].point2[0], correspondences[0].point2[1],
+	  	 correspondences[1].point2[0], correspondences[1].point2[1],
+	  	 correspondences[2].point2[0], correspondences[2].point2[1],
+	  	 correspondences[3].point2[0], correspondences[3].point2[1];
+
+	A << correspondences[0].point1[0], correspondences[0].point1[1], correspondences[0].point1[2], 0, 0, 0, -correspondences[0].point1[0]*correspondences[0].point2[0], -correspondences[0].point1[1]*correspondences[0].point2[0], 
+		   0, 0, 0, correspondences[0].point1[0], correspondences[0].point1[1], correspondences[0].point1[2], -correspondences[0].point1[0]*correspondences[0].point2[1], -correspondences[0].point1[1]*correspondences[0].point2[1], 
+		   correspondences[1].point1[0], correspondences[1].point1[1], correspondences[1].point1[2], 0, 0, 0, -correspondences[1].point1[0]*correspondences[1].point2[0], -correspondences[1].point1[1]*correspondences[1].point2[0], 
+		   0, 0, 0, correspondences[1].point1[0], correspondences[1].point1[1], correspondences[1].point1[2], -correspondences[1].point1[0]*correspondences[1].point2[1], -correspondences[1].point1[1]*correspondences[1].point2[1], 
+		   correspondences[2].point1[0], correspondences[2].point1[1], correspondences[2].point1[2], 0, 0, 0, -correspondences[2].point1[0]*correspondences[2].point2[0], -correspondences[2].point1[1]*correspondences[2].point2[0], 
+		   0, 0, 0, correspondences[2].point1[0], correspondences[2].point1[1], correspondences[2].point1[2], -correspondences[2].point1[0]*correspondences[2].point2[1], -correspondences[2].point1[1]*correspondences[2].point2[1],
+		   correspondences[3].point1[0], correspondences[3].point1[1], correspondences[3].point1[2], 0, 0, 0, -correspondences[3].point1[0]*correspondences[3].point2[0], -correspondences[3].point1[1]*correspondences[3].point2[0], 
+		   0, 0, 0, correspondences[3].point1[0], correspondences[3].point1[1], correspondences[3].point1[2], -correspondences[3].point1[0]*correspondences[3].point2[1], -correspondences[3].point1[1]*correspondences[3].point2[1];
+
+  // A * x = B;
+	x = A.inverse() * B;
+	
+	output(0, 0) = x(0, 0);
+	output(0, 1) = x(1, 0);
+	output(0, 2) = x(2, 0);
+	output(1, 0) = x(3, 0);
+	output(1, 1) = x(4, 0);
+	output(1, 2) = x(5, 0);
+	output(2, 0) = x(6, 0);
+	output(2, 1) = x(7, 0);
+	
+
+  return output;
 }
 
 BoundingBox computeTransformedBBox(int imwidth, int imheight, Matrix H) {
