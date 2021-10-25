@@ -3,8 +3,7 @@
 
 using namespace std;
 
-void applyHomography(const Image &source, const Matrix &H, Image &out,
-                     bool bilinear) {
+void applyHomography(const Image &source, const Matrix &H, Image &out, bool bilinear) {
   // --------- HANDOUT  PS06 ------------------------------
   // Transform image source using the homography H, and composite in onto out.
   // if bilinear == true, using bilinear interpolation. Use nearest neighbor
@@ -15,7 +14,7 @@ void applyHomography(const Image &source, const Matrix &H, Image &out,
   for (int h; h < out.height(); h++) {
     for (int w; w < out.width(); w++) {
 
-      Matrix coords(3, 1); // create column matrix [x' y' 1]
+      Matrix coords(3, 1); // create column matrix [x y 1]
       coords(0, 0) = w;
       coords(1, 0) = h;
       coords(2, 0) = 1;
@@ -25,18 +24,25 @@ void applyHomography(const Image &source, const Matrix &H, Image &out,
       float x_prime = xyw_prime(0, 0) / xyw_prime(2, 0); // x'/w'
       float y_prime = xyw_prime(1, 0) / xyw_prime(2, 0); // y'/w'
 
+      // cout << "x' coord: " << x_prime << endl;
+      // cout << "y' coord: " << y_prime << endl;
+
       if ((x_prime < source.width() && x_prime > 0) &&   // Check bounds, only utilize if valid in source image
           (y_prime < source.height() && y_prime > 0)) {
+
+        cout << "Valid pixel" << endl;
         
         for (int c; c < out.channels(); c++) {
           if (bilinear) {
-            out(w, h, c) = interpolateLin(source, x_prime, y_prime, c); // If True use bilinear
+            out(w, h, c) = interpolateLin(source, x_prime, y_prime, c, true); // If True use bilinear
           }
           else {
             out(w, h, c) = source(round(x_prime), round(y_prime), c); // Else nearest neighbor by rounding
           }
         }
       }
+      // cout << "im width " << source.width() << endl;
+      // cout << "im height " << source.height() << endl;
     }
   }
 }

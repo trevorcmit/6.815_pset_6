@@ -253,11 +253,13 @@ void testApplyHomographyFast() {
 
 // This is a way for you to test your functions.
 int main() {
-  cout << "nothing done in a6_main.cpp, but read me! "
-       << "There's some useful info here." << endl;
+  // cout << "nothing done in a6_main.cpp, but read me! "
+  //      << "There's some useful info here." << endl;
+
+  clock_t start = clock();
 
   // testEigen();
-  // testApplyHomography();
+  testApplyHomography();
   // testComputeHomography();
   // testComputeTransformedBBox();
   // testBBoxUnion();
@@ -271,4 +273,9 @@ int main() {
   // testStitchScience();
   // testStitchConvention();
   // testStitchBoston1();
+
+  clock_t end = clock();
+  double duration = (end - start) * 1.0f / CLOCKS_PER_SEC;
+  cout << "a6_main.cpp runtime: " << duration << "s" << endl;
+  return 0;
 }
