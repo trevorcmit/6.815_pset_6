@@ -108,14 +108,18 @@ BoundingBox computeTransformedBBox(int imwidth, int imheight, Matrix H) {
     if (outs.at(n)(1, 0) < y_min) y_min = outs.at(n)(1, 0);
     if (outs.at(n)(1, 0) > y_max) y_max = outs.at(n)(1, 0);
   }
-
   return BoundingBox(x_min, x_max, y_min, y_max); // Return Box object with solved coordinates
 }
 
 BoundingBox bboxUnion(BoundingBox B1, BoundingBox B2) {
   // --------- HANDOUT  PS06 ------------------------------
   // Compute the bounding box that tightly bounds the union of B1 an B2.
-  return BoundingBox(0, 0, 0, 0);
+  return BoundingBox( // Ternary operator to get minimums/maximums over both boxes
+    (B1.x1 < B2.x1) ? B1.x1 : B2.x1, 
+    (B1.x2 > B2.x2) ? B1.x2 : B2.x2, 
+    (B1.y1 < B2.y1) ? B1.y1 : B2.y2, 
+    (B1.y2 > B2.y2) ? B1.y2 : B2.y2
+  );
 }
 
 Matrix makeTranslation(BoundingBox B) {

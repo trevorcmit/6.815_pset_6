@@ -164,8 +164,7 @@ void testBBoxUnion() {
   BoundingBox bbox2(-75, 19, 9, 20);
   BoundingBox bbox = bboxUnion(bbox1, bbox2);
   assert(bbox.x1 == -75 && bbox.x2 == 25 && bbox.y1 == 3 && bbox.y2 == 109);
-  cout << bbox.x1 << " " << bbox.x2 << " " << bbox.y1 << " " << bbox.y2 << " "
-       << endl;
+  cout << bbox.x1 << " " << bbox.x2 << " " << bbox.y1 << " " << bbox.y2 << " " << endl;
 }
 
 void testTranslate() {
@@ -261,8 +260,8 @@ int main() {
   // testEigen();
   // testApplyHomography();
   // testComputeHomography();
-  testComputeTransformedBBox();
-  // testBBoxUnion();
+  // testComputeTransformedBBox();
+  testBBoxUnion();
   // testTranslate();
   // testStitchMonu();
   // testStitchStata();
