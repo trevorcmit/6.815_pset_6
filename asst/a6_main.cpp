@@ -259,8 +259,8 @@ int main() {
   clock_t start = clock();
 
   // testEigen();
-  testApplyHomography();
-  // testComputeHomography();
+  // testApplyHomography();
+  testComputeHomography();
   // testComputeTransformedBBox();
   // testBBoxUnion();
   // testTranslate();

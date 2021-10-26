@@ -8,41 +8,31 @@ void applyHomography(const Image &source, const Matrix &H, Image &out, bool bili
   // Transform image source using the homography H, and composite in onto out.
   // if bilinear == true, using bilinear interpolation. Use nearest neighbor
   // otherwise.
-
   Matrix H_inv = H.inverse(); // Find inverse of H to use for calculations
 
-  for (int h; h < out.height(); h++) {
-    for (int w; w < out.width(); w++) {
+  for (int h = 0; h < out.height(); h++) {
+    for (int w = 0; w < out.width(); w++) {
 
-      Matrix coords(3, 1); // create column matrix [x y 1]
-      coords(0, 0) = w;
-      coords(1, 0) = h;
-      coords(2, 0) = 1;
+      Matrix coords = Matrix::Zero(3, 1); // create column matrix [x y 1]
+      coords << w, h, 1;
 
       Matrix xyw_prime = H_inv * coords; // Multiply H^-1 times output column matrix
 
       float x_prime = xyw_prime(0, 0) / xyw_prime(2, 0); // x'/w'
       float y_prime = xyw_prime(1, 0) / xyw_prime(2, 0); // y'/w'
 
-      // cout << "x' coord: " << x_prime << endl;
-      // cout << "y' coord: " << y_prime << endl;
-
       if ((x_prime < source.width() && x_prime > 0) &&   // Check bounds, only utilize if valid in source image
           (y_prime < source.height() && y_prime > 0)) {
-
-        cout << "Valid pixel" << endl;
         
-        for (int c; c < out.channels(); c++) {
+        for (int c = 0; c < out.channels(); c++) { // Iterate for all channels, coords are the same
           if (bilinear) {
             out(w, h, c) = interpolateLin(source, x_prime, y_prime, c, true); // If True use bilinear
           }
           else {
-            out(w, h, c) = source(round(x_prime), round(y_prime), c); // Else nearest neighbor by rounding
+            out(w, h, c) = source.smartAccessor(round(x_prime), round(y_prime), c, true);
           }
         }
       }
-      // cout << "im width " << source.width() << endl;
-      // cout << "im height " << source.height() << endl;
     }
   }
 }
@@ -50,44 +40,35 @@ void applyHomography(const Image &source, const Matrix &H, Image &out, bool bili
 Matrix computeHomography(const CorrespondencePair correspondences[4]) {
   // --------- HANDOUT  PS06 ------------------------------
   // Compute a homography from 4 point correspondences.
-
-  Matrix output(3, 3);
-  output(2, 2) = 1.0f;
-
-  Matrix x(8, 1);
-	// x << a << b << c << d << e << f << g << h;
-
-  CorrespondencePair c = correspondences[4];
-
 	Matrix A(8, 8);
 	Matrix B(8, 1);
-	B << correspondences[0].point2[0], correspondences[0].point2[1],
-	  	 correspondences[1].point2[0], correspondences[1].point2[1],
-	  	 correspondences[2].point2[0], correspondences[2].point2[1],
-	  	 correspondences[3].point2[0], correspondences[3].point2[1];
 
-	A << correspondences[0].point1[0], correspondences[0].point1[1], correspondences[0].point1[2], 0, 0, 0, -correspondences[0].point1[0]*correspondences[0].point2[0], -correspondences[0].point1[1]*correspondences[0].point2[0], 
-		   0, 0, 0, correspondences[0].point1[0], correspondences[0].point1[1], correspondences[0].point1[2], -correspondences[0].point1[0]*correspondences[0].point2[1], -correspondences[0].point1[1]*correspondences[0].point2[1], 
-		   correspondences[1].point1[0], correspondences[1].point1[1], correspondences[1].point1[2], 0, 0, 0, -correspondences[1].point1[0]*correspondences[1].point2[0], -correspondences[1].point1[1]*correspondences[1].point2[0], 
-		   0, 0, 0, correspondences[1].point1[0], correspondences[1].point1[1], correspondences[1].point1[2], -correspondences[1].point1[0]*correspondences[1].point2[1], -correspondences[1].point1[1]*correspondences[1].point2[1], 
-		   correspondences[2].point1[0], correspondences[2].point1[1], correspondences[2].point1[2], 0, 0, 0, -correspondences[2].point1[0]*correspondences[2].point2[0], -correspondences[2].point1[1]*correspondences[2].point2[0], 
-		   0, 0, 0, correspondences[2].point1[0], correspondences[2].point1[1], correspondences[2].point1[2], -correspondences[2].point1[0]*correspondences[2].point2[1], -correspondences[2].point1[1]*correspondences[2].point2[1],
-		   correspondences[3].point1[0], correspondences[3].point1[1], correspondences[3].point1[2], 0, 0, 0, -correspondences[3].point1[0]*correspondences[3].point2[0], -correspondences[3].point1[1]*correspondences[3].point2[0], 
-		   0, 0, 0, correspondences[3].point1[0], correspondences[3].point1[1], correspondences[3].point1[2], -correspondences[3].point1[0]*correspondences[3].point2[1], -correspondences[3].point1[1]*correspondences[3].point2[1];
+  for (int n = 0; n < 4; n++) {
+    B(2*n)   = correspondences[n].point2[0];
+    B(2*n+1) = correspondences[n].point2[1];
 
-  // A * x = B;
-	x = A.inverse() * B;
-	
-	output(0, 0) = x(0, 0);
-	output(0, 1) = x(1, 0);
-	output(0, 2) = x(2, 0);
-	output(1, 0) = x(3, 0);
-	output(1, 1) = x(4, 0);
-	output(1, 2) = x(5, 0);
-	output(2, 0) = x(6, 0);
-	output(2, 1) = x(7, 0);
-	
+    A(2*n, 0) = correspondences[n].point1[0];
+    A(2*n, 1) = correspondences[n].point1[1];
+    A(2*n, 2) = correspondences[n].point1[2];
+    A(2*n, 3) = 0;
+    A(2*n, 4) = 0;
+    A(2*n, 5) = 0;
+    A(2*n, 6) = -correspondences[n].point1[0]*correspondences[n].point2[0];
+    A(2*n, 7) = -correspondences[n].point1[1]*correspondences[n].point2[0];
+    A(2*n+1, 0) = 0;
+    A(2*n+1, 1) = 0;
+    A(2*n+1, 2) = 0;
+    A(2*n+1, 3) = correspondences[n].point1[0];
+    A(2*n+1, 4) = correspondences[n].point1[1];
+    A(2*n+1, 5) = correspondences[n].point1[2];
+    A(2*n+1, 6) = -correspondences[n].point1[0]*correspondences[n].point2[1];
+    A(2*n+1, 7) = -correspondences[n].point1[1]*correspondences[n].point2[1];
+  }
 
+  Matrix x(8, 1);      // Initialize column vector for x
+	x = A.inverse() * B; // Solving Ax = b
+  Matrix output(3, 3); // Turn x into a 3x3 matrix
+	output << x(0, 0), x(1, 0), x(2, 0), x(3, 0), x(4, 0), x(5, 0), x(6, 0), x(7, 0), 1;
   return output;
 }
 
