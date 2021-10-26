@@ -223,17 +223,6 @@ void testStitchGuedelon() {
   out.write("./Output/guedelon-stitch.png");
 }
 
-void testStitchScience() {
-
-}
-
-void testStitchConvention() {
-  
-}
-
-void testStitchBoston1() {
-  
-}
 
 void testApplyHomographyFast() {
   clock_t start;
@@ -275,15 +264,15 @@ int main() {
   // testComputeTransformedBBox();
   // testBBoxUnion();
   // testTranslate();
-  testStitchMonu();
-  testStitchStata();
-  testStitchGuedelon();
+  // testStitchMonu();
+  // testStitchStata();/
+  // testStitchGuedelon();
   // testApplyHomographyFast();
 
   ////--------------- for 6.865 only
-  // testStitchScience();
-  // testStitchConvention();
-  // testStitchBoston1();
+  testStitchScience();
+  testStitchConvention();
+  testStitchBoston1();
 
   clock_t end = clock();
   double duration = (end - start) * 1.0f / CLOCKS_PER_SEC;

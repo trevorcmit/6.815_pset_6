@@ -180,8 +180,47 @@ Image drawBoundingBox(const Image &im, BoundingBox bbox) {
   return output;
 }
 
+
 void applyHomographyFast(const Image &source, const Matrix &H, Image &out, bool bilinear) {
   // --------- HANDOUT  PS06 ------------------------------
   // Same as apply but change only the pixels of out that are within the
   // predicted bounding box (when H maps source to its new position).
+  Matrix H_inv = H.inverse(); // Find inverse of H to use for calculations
+
+  BoundingBox bounds = computeTransformedBBox(source.width(), source.height(), H);
+
+  for (int h = bounds.y1; h < bounds.y2; h++) {
+    for (int w = bounds.x1; w < bounds.x2; w++) {
+
+      Matrix coords = Matrix::Zero(3, 1); // create column matrix [x y 1]
+      coords << w, h, 1;
+
+      Matrix xyw_prime = H_inv * coords; // Multiply H^-1 times output column matrix
+
+      float x_prime = xyw_prime(0, 0) / xyw_prime(2, 0); // x'/w'
+      float y_prime = xyw_prime(1, 0) / xyw_prime(2, 0); // y'/w'
+
+      if ((x_prime < source.width() && x_prime > 0) &&   // Check bounds, only utilize if valid in source image
+          (y_prime < source.height() && y_prime > 0)) {
+        
+        for (int c = 0; c < out.channels(); c++) { // Iterate for all channels, coords are the same
+          if (bilinear) {
+            out(w, h, c) = interpolateLin(source, x_prime, y_prime, c, true); // If True use bilinear
+          }
+          else {
+            out(w, h, c) = source.smartAccessor(round(x_prime), round(y_prime), c, true);
+          }
+        }
+      }
+    }
+  }
+  
+}
+
+Matrix compute_homography_rotation(const CorrespondencePair correspondences[2]) {
+  // --------- EXTRA CREDIT PS06 ------------------------------
+  // Using two points, create  3x3 homography matrix (rotation matrix)
+  Matrix H = Matrix::Zero(3, 3);
+
+  return H;
 }
