@@ -153,9 +153,9 @@ void testComputeTransformedBBox() {
 
   // Students TODO: drawBoundingBox would be useful to implement for
   // debugging
-  // Image green("Input/green.png");
-  // Image greenwithbox = drawBoundingBox(green, bbox);
-  // greenwithbox.write("Output/draw_bbox.png");
+  Image green("Input/green.png");
+  Image greenwithbox = drawBoundingBox(green, bbox);
+  greenwithbox.write("Output/draw_bbox.png");
 }
 
 // test union
@@ -260,8 +260,8 @@ int main() {
 
   // testEigen();
   // testApplyHomography();
-  testComputeHomography();
-  // testComputeTransformedBBox();
+  // testComputeHomography();
+  testComputeTransformedBBox();
   // testBBoxUnion();
   // testTranslate();
   // testStitchMonu();

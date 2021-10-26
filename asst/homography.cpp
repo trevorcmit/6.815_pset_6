@@ -40,35 +40,35 @@ void applyHomography(const Image &source, const Matrix &H, Image &out, bool bili
 Matrix computeHomography(const CorrespondencePair correspondences[4]) {
   // --------- HANDOUT  PS06 ------------------------------
   // Compute a homography from 4 point correspondences.
-	Matrix A(8, 8);
-	Matrix B(8, 1);
+	Matrix A(8, 8); // Matrix to represent system of equations for all four correspondences (8 equations)
+	Matrix B(8, 1); // Column vector of new x and y coordinates for all correspondences
 
   for (int n = 0; n < 4; n++) {
-    B(2*n)   = correspondences[n].point2[0];
-    B(2*n+1) = correspondences[n].point2[1];
+    B(2*n)   = correspondences[n].point2[0]; // New x coordinate
+    B(2*n+1) = correspondences[n].point2[1]; // New y coordinate
 
-    A(2*n, 0) = correspondences[n].point1[0];
-    A(2*n, 1) = correspondences[n].point1[1];
-    A(2*n, 2) = correspondences[n].point1[2];
+    A(2*n, 0) = correspondences[n].point1[0]; // x'
+    A(2*n, 1) = correspondences[n].point1[1]; // y'
+    A(2*n, 2) = correspondences[n].point1[2]; // z' (this value will be 1)
     A(2*n, 3) = 0;
     A(2*n, 4) = 0;
     A(2*n, 5) = 0;
-    A(2*n, 6) = -correspondences[n].point1[0]*correspondences[n].point2[0];
-    A(2*n, 7) = -correspondences[n].point1[1]*correspondences[n].point2[0];
+    A(2*n, 6) = -correspondences[n].point1[0]*correspondences[n].point2[0]; // -x'x
+    A(2*n, 7) = -correspondences[n].point1[1]*correspondences[n].point2[0]; // -y'x
     A(2*n+1, 0) = 0;
     A(2*n+1, 1) = 0;
     A(2*n+1, 2) = 0;
-    A(2*n+1, 3) = correspondences[n].point1[0];
-    A(2*n+1, 4) = correspondences[n].point1[1];
-    A(2*n+1, 5) = correspondences[n].point1[2];
-    A(2*n+1, 6) = -correspondences[n].point1[0]*correspondences[n].point2[1];
-    A(2*n+1, 7) = -correspondences[n].point1[1]*correspondences[n].point2[1];
+    A(2*n+1, 3) = correspondences[n].point1[0]; // x'
+    A(2*n+1, 4) = correspondences[n].point1[1]; // y'
+    A(2*n+1, 5) = correspondences[n].point1[2]; // z'
+    A(2*n+1, 6) = -correspondences[n].point1[0]*correspondences[n].point2[1]; // -x'y
+    A(2*n+1, 7) = -correspondences[n].point1[1]*correspondences[n].point2[1]; // -y'y
   }
 
   Matrix x(8, 1);      // Initialize column vector for x
 	x = A.inverse() * B; // Solving Ax = b
   Matrix output(3, 3); // Turn x into a 3x3 matrix
-	output << x(0, 0), x(1, 0), x(2, 0), x(3, 0), x(4, 0), x(5, 0), x(6, 0), x(7, 0), 1;
+	output << x(0, 0), x(1, 0), x(2, 0), x(3, 0), x(4, 0), x(5, 0), x(6, 0), x(7, 0), 1; // 1 is bottom right corner
   return output;
 }
 
@@ -76,7 +76,40 @@ BoundingBox computeTransformedBBox(int imwidth, int imheight, Matrix H) {
   // --------- HANDOUT  PS06 ------------------------------
   // Predict the bounding boxes that encompasses all the transformed
   // coordinates for pixels frow and Image with size (imwidth, imheight)
-  return BoundingBox(0, 0, 0, 0);
+
+  Matrix src0(3, 1), src1(3, 1), src2(3, 1), src3(3, 1); // Source coord. column vectors
+	Matrix out0(3, 1), out1(3, 1), out2(3, 1), out3(3, 1); // Output coord. column vectors
+
+  src0 << 0, 0, 1;
+	src1 << 0, imheight, 1; // Add four corner coordinates to source column vectors 
+	src2 << imwidth, 0, 1;
+	src3 << imwidth, imheight, 1;
+
+  out0 = H * src0;
+	out1 = H * src1; // Multiply H by source column vectors to fill output column vectors
+	out2 = H * src2;
+	out3 = H * src3;
+
+  out0(0, 0) /= out0(2, 0);
+	out0(1, 0) /= out0(2, 0); // Divide out z factor
+	out1(0, 0) /= out1(2, 0);
+	out1(1, 0) /= out1(2, 0);
+	out2(0, 0) /= out2(2, 0);
+	out2(1, 0) /= out2(2, 0);
+	out3(0, 0) /= out3(2, 0);
+	out3(1, 0) /= out3(2, 0);
+
+  int x_min = out0(0, 0), x_max = out0(0, 0), y_min = out0(1, 0), y_max = out0(1, 0); // Initialize bounds
+
+  vector<Matrix> outs = {out1, out2, out3}; // Make vector so iteration can do work in less lines
+  for (int n = 0; n < 3; n++) {
+    if (outs.at(n)(0, 0) < x_min) x_min = outs.at(n)(0, 0); // Conditionals for each boundary
+    if (outs.at(n)(0, 0) > x_max) x_max = outs.at(n)(0, 0);
+    if (outs.at(n)(1, 0) < y_min) y_min = outs.at(n)(1, 0);
+    if (outs.at(n)(1, 0) > y_max) y_max = outs.at(n)(1, 0);
+  }
+
+  return BoundingBox(x_min, x_max, y_min, y_max); // Return Box object with solved coordinates
 }
 
 BoundingBox bboxUnion(BoundingBox B1, BoundingBox B2) {
@@ -123,7 +156,9 @@ Image drawBoundingBox(const Image &im, BoundingBox bbox) {
                    ||----w |
                    ||     ||
   */
-  return im;
+  Image output = im;
+  output.create_rectangle(bbox.x1, bbox.y1, bbox.x2, bbox.y2, 1.0f, 1.0f, 1.0f);
+  return output;
 }
 
 void applyHomographyFast(const Image &source, const Matrix &H, Image &out, bool bilinear) {
