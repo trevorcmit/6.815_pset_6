@@ -126,16 +126,31 @@ Matrix makeTranslation(BoundingBox B) {
   // --------- HANDOUT  PS06 ------------------------------
   // Compute a translation matrix (as a homography matrix) that translates the
   // top-left corner of B to (0,0).
-  return Matrix::Zero(3, 3);
+  Matrix output = Matrix::Zero(3, 3); // Initialize 3x3 output homography matrix
+  output << 1, 0, -1 * B.x1, 0, 1, -1 * B.y1, 0, 0, 1; // Fill matrix
+  return output;
 }
 
-Image stitch(const Image &im1, const Image &im2,
-             const CorrespondencePair correspondences[4]) {
+Image stitch(const Image &im1, const Image &im2, const CorrespondencePair correspondences[4]) {
   // --------- HANDOUT  PS06 ------------------------------
   // Transform im1 to align with im2 according to the set of correspondences.
   // make sure the union of the bounding boxes for im2 and transformed_im1 is
   // translated properly (use makeTranslation)
-  return im1;
+
+  Matrix H = computeHomography(correspondences); // Compute homography from correspondences
+
+  BoundingBox bbox = bboxUnion(
+    computeTransformedBBox(im1.width(), im1.height(), H), // Bounding box for applying homography to im1
+    computeTransformedBBox(im2.width(), im2.height(), Matrix::Identity(3,3)) // Add image 2 size
+  );
+  Matrix translate = makeTranslation(bbox); // Get translate based on combination of both boxes
+
+  Image output(bbox.x2 - bbox.x1, bbox.y2 - bbox.y1, im2.channels()); // Create output
+  output.set_color(); // Set to black so pixels can be adjusted by applyHomography
+
+  applyHomography(im1, translate * H, output, true); // translation and homography on image 1
+  applyHomography(im2, translate, output, true);     // solely translation on image 2
+  return output;
 }
 
 // debug-useful

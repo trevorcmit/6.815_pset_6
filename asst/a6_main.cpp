@@ -223,6 +223,18 @@ void testStitchGuedelon() {
   out.write("./Output/guedelon-stitch.png");
 }
 
+void testStitchScience() {
+
+}
+
+void testStitchConvention() {
+  
+}
+
+void testStitchBoston1() {
+  
+}
+
 void testApplyHomographyFast() {
   clock_t start;
 
@@ -261,11 +273,11 @@ int main() {
   // testApplyHomography();
   // testComputeHomography();
   // testComputeTransformedBBox();
-  testBBoxUnion();
+  // testBBoxUnion();
   // testTranslate();
-  // testStitchMonu();
-  // testStitchStata();
-  // testStitchGuedelon();
+  testStitchMonu();
+  testStitchStata();
+  testStitchGuedelon();
   // testApplyHomographyFast();
 
   ////--------------- for 6.865 only
